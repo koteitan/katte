@@ -27,41 +27,20 @@ class ProjectManager {
     await fs.mkdir(claudeDir, { recursive: true });
     
     const settings = {
-      "allowedTools": [
-        "Read",
-        "WriteFile(*)",        // プロジェクト内のみ書き込み許可
-        "Edit(*)",             // プロジェクト内のみ編集許可
-        "MultiEdit(*)",        // プロジェクト内のみ複数編集許可
-        "Write(*)",            // プロジェクト内のみ新規ファイル作成許可
-        
-        // 安全なBashコマンドのみ許可（実行ファイル禁止）
-        "Bash(ls *)",          // lsコマンドのみ
-        "Bash(cat *)",         // catコマンドのみ
-        "Bash(grep *)",        // grepコマンドのみ
-        "Bash(mkdir *)",       // mkdirコマンドのみ
-        "Bash(touch *)",       // touchコマンドのみ
-        "Bash(echo *)",        // echoコマンドのみ
-        "Bash(pwd)",           // pwdコマンドのみ
-        "Bash(head *)",        // headコマンドのみ
-        "Bash(tail *)",        // tailコマンドのみ
-        "Bash(wc *)",          // wcコマンドのみ
-        
-        // パッケージマネージャーは初期化のみ許可
-        "Bash(npm init *)",    // npm initのみ
-        "Bash(npm install *)", // npm installのみ
-        "Bash(git init)",      // git initのみ
-        "Bash(git add *)",     // git addのみ
-        "Bash(git commit *)",  // git commitのみ
-        
-        // 組み込みツールを優先使用
-        "LS",
-        "Grep",
-        "Glob"
-      ],
-      "security": {
-        "preventParentDirAccess": true,
-        "restrictToProjectDir": true,
-        "blockExecutables": true
+      "permissions": {
+        "allow": [
+          "Read(*)",           // ファイル読み取り権限
+          "Write(*)",          // ファイル作成権限
+          "Edit(*)",           // ファイル編集権限
+          "MultiEdit(*)",      // 複数ファイル編集権限
+          "LS(*)",             // ディレクトリ一覧権限
+          "Grep(*)",           // 検索権限
+          "Glob(*)"            // パターンマッチング権限
+        ],
+        "deny": [
+          "Bash(*)"            // Bashコマンド実行を禁止
+        ],
+        "defaultMode": "acceptEdits"
       }
     };
     

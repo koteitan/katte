@@ -12,6 +12,32 @@ class SecurityManager {
       'virus', 'malware', 'hack', 'exploit', 'ddos', 'spam',
       'phishing', 'ransomware', 'trojan', 'backdoor'
     ];
+    
+    // 危険なシステム操作を検出するキーワード
+    this.dangerousSystemKeywords = [
+      'rm -rf', 'sudo rm', 'delete', '削除', 'remove', 'destroy', '破壊',
+      'format', 'wipe', 'crontab', 'cronjob', 'cron', 'systemctl',
+      'service', 'daemon', 'root', 'sudo', 'chmod 777', 'chown',
+      '/etc/', '/var/', '/usr/', '/bin/', '/sbin/', '/home/', '/root/',
+      'kill -9', 'pkill', 'killall', 'shutdown', 'reboot', 'halt',
+      'dd if=', 'fdisk', 'mount', 'umount', 'fsck', 'mkfs'
+    ];
+    
+    // 危険なファイル操作パターン
+    this.dangerousFilePatterns = [
+      /\.\.\//, // パストラバーサル
+      /\/etc\//, // システム設定ディレクトリ
+      /\/var\//, // システム変数ディレクトリ
+      /\/usr\//, // システムユーティリティ
+      /\/bin\//, // システムバイナリ
+      /\/sbin\//, // システムバイナリ
+      /\/home\//, // ユーザーホームディレクトリ
+      /\/root\//, // rootディレクトリ
+      /rm\s+-rf/, // 強制削除コマンド
+      /sudo\s+/, // 管理者権限
+      /crontab\s+/, // cron設定
+      /systemctl\s+/, // systemd制御
+    ];
   }
 
   checkRateLimit(pubkey) {
@@ -37,8 +63,24 @@ class SecurityManager {
       return { valid: false, reason: 'Project idea must be between 2-100 characters' };
     }
     
-    // 禁止キーワードチェック
+    // 危険なシステム操作キーワードチェック
     const lowerIdea = idea.toLowerCase();
+    for (const dangerous of this.dangerousSystemKeywords) {
+      if (lowerIdea.includes(dangerous.toLowerCase())) {
+        console.log(`🚨 SECURITY ALERT: Dangerous system operation detected - "${dangerous}" in request from user`);
+        return { valid: false, reason: 'Contains potentially dangerous system operation keywords' };
+      }
+    }
+    
+    // 危険なファイル操作パターンチェック
+    for (const pattern of this.dangerousFilePatterns) {
+      if (pattern.test(idea)) {
+        console.log(`🚨 SECURITY ALERT: Dangerous file operation pattern detected - ${pattern} in request`);
+        return { valid: false, reason: 'Contains potentially dangerous file operation patterns' };
+      }
+    }
+    
+    // 従来の禁止キーワードチェック
     for (const banned of this.bannedKeywords) {
       if (lowerIdea.includes(banned)) {
         return { valid: false, reason: `Contains banned keyword: ${banned}` };
