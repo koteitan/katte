@@ -1,0 +1,9 @@
+node_modules/
+.env
+generated-projects/
+*.log
+.DS_Store
+dist/
+build/
+.vscode/
+.idea/
