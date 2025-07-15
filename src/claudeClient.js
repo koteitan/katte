@@ -1,67 +1,57 @@
-const Anthropic = require('@anthropic-ai/sdk');
 const { exec } = require('child_process');
 const { promisify } = require('util');
+const fs = require('fs').promises;
+const path = require('path');
 const execAsync = promisify(exec);
 
 class ClaudeClient {
   constructor(apiKey) {
-    this.anthropic = new Anthropic({
-      apiKey: apiKey,
-    });
+    // Claude CLI uses system configuration, no API key needed here
   }
 
   async generateProject(projectIdea, projectPath, execEnv = {}) {
-    const prompt = `
-「${projectIdea}」というプロジェクトを作成してください。
+    const prompt = `「${projectIdea}」というプロジェクトを作成してください。\n\n以下の要件に従ってください：\n1. 適切なプログラミング言語とフレームワークを選択してください\n2. 基本的な機能を実装してください\n3. README.mdを作成してください\n4. 必要な設定ファイルを作成してください\n5. セキュリティベストプラクティスに従ってください\n6. 悪意のあるコードや危険な操作は含めないでください`;
 
-以下の要件に従ってください：
-1. プロジェクトのディレクトリは ${projectPath} に作成されています
-2. 適切なプログラミング言語とフレームワークを選択してください
-3. 基本的な機能を実装してください
-4. README.mdを作成してください
-5. 必要な設定ファイルを作成してください
-6. セキュリティベストプラクティスに従ってください
-7. 悪意のあるコードや危険な操作は含めないでください
-
-プロジェクトを作成したら、作成したファイルの概要と使い方を説明してください。
-`;
-
-    try {
-      const message = await this.anthropic.messages.create({
-        model: 'claude-3-sonnet-20240229',
-        max_tokens: 4000,
-        temperature: 0,
-        system: "あなたはセキュリティを重視するソフトウェアエンジニアです。安全で有用なプロジェクトのみを作成します。",
-        messages: [
-          {
-            role: 'user',
-            content: prompt
-          }
-        ]
-      });
-
-      const claudeInstructions = message.content[0].text;
-      
-      await this.executeClaudeCode(projectPath, claudeInstructions, execEnv);
-      
-      return this.summarizeProject(projectPath);
-    } catch (error) {
-      throw new Error(`Claude API error: ${error.message}`);
-    }
+    await this.executeClaudeCode(projectPath, prompt, execEnv);
+    
+    return this.summarizeProject(projectPath);
   }
 
-  async executeClaudeCode(projectPath, instructions, execEnv) {
+  async executeClaudeCode(projectPath, prompt, execEnv) {
     try {
       const options = {
         maxBuffer: execEnv.maxBuffer || 1024 * 1024 * 10,
-        timeout: execEnv.timeout || 300000,
-        env: execEnv.env || process.env
+        timeout: execEnv.timeout || 600000, // 10分
+        env: execEnv.env || process.env,
+        killSignal: 'SIGKILL'
       };
       
-      await execAsync(`cd ${projectPath} && claude-code "${instructions}"`, options);
+      // Claude CLIコマンドを出力のみ（テスト用）
+      const command = `cd ${projectPath} && claude -p "${prompt}" --output-format text --verbose`;
+      console.log(`\n--------------ここから--------------`);
+      console.log(`Project path: ${projectPath}`);
+      console.log(`Command: ${command}`);
+      console.log(`Prompt: ${prompt}`);
+      console.log(`--------------ここまで--------------\n`);
+      
+      // 実際の実行はスキップ（手動テスト用）
+      console.log('Claude CLI execution skipped - please run manually');
+      
+      // 実際に実行する場合は以下のコメントを外す
+      /*
+      console.log(`Executing Claude CLI in: ${projectPath}`);
+      const startTime = Date.now();
+      const result = await execAsync(command, options);
+      const endTime = Date.now();
+      
+      console.log(`Claude CLI execution completed in ${endTime - startTime}ms`);
+      if (result.stdout) console.log('Claude CLI stdout:', result.stdout);
+      if (result.stderr) console.log('Claude CLI stderr:', result.stderr);
+      */
+      
     } catch (error) {
-      console.error('Claude Code execution error:', error);
-      throw new Error('Failed to execute Claude Code');
+      console.error('Claude CLI execution error:', error);
+      throw new Error('Failed to execute Claude CLI');
     }
   }
 

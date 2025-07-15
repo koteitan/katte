@@ -4,8 +4,13 @@ const { ErrorHandler } = require('./errorHandler');
 
 class NostrBot {
   constructor({ privateKey, relays, claudeClient, projectManager }) {
-    this.privateKey = privateKey;
-    this.publicKey = getPublicKey(privateKey);
+    // nsec形式の場合はhexに変換
+    if (privateKey.startsWith('nsec1')) {
+      this.privateKey = nip19.decode(privateKey).data;
+    } else {
+      this.privateKey = privateKey;
+    }
+    this.publicKey = getPublicKey(this.privateKey);
     this.relays = relays;
     this.claudeClient = claudeClient;
     this.projectManager = projectManager;
@@ -21,6 +26,8 @@ class NostrBot {
   }
 
   async start() {
+    console.log('Connecting to relays:', this.relays);
+    
     const sub = this.pool.subscribeMany(
       this.relays,
       [
@@ -31,7 +38,11 @@ class NostrBot {
       ],
       {
         onevent: async (event) => {
+          console.log('Received event:', event.id, 'from', event.pubkey.slice(0, 8), ':', event.content);
           await this.handleEvent(event);
+        },
+        oneose: () => {
+          console.log('End of stored events');
         }
       }
     );
@@ -45,7 +56,35 @@ class NostrBot {
 
   async handleEvent(event) {
     const content = event.content;
-    const projectMatch = content.match(/(.+?)作りたい/);
+    
+    // 様々なパターンに対応
+    const patterns = [
+      /(.+?)作りたい/,      // ○○作りたい
+      /(.+?)ほしい/,        // ○○ほしい
+      /(.+?)欲しい/,        // ○○欲しい
+      /(.+?)が欲しい/,      // ○○が欲しい
+      /(.+?)がほしい/,      // ○○がほしい
+      /(.+?)を作って/,      // ○○を作って
+      /(.+?)作って/,        // ○○作って
+      /(.+?)を作成して/,    // ○○を作成して
+      /(.+?)作成して/,      // ○○作成して
+      /(.+?)を開発して/,    // ○○を開発して
+      /(.+?)開発して/,      // ○○開発して
+      /(.+?)を実装して/,    // ○○を実装して
+      /(.+?)実装して/,      // ○○実装して
+      /(.+?)が必要/,        // ○○が必要
+      /(.+?)必要/,          // ○○必要
+      /(.+?)を生成して/,    // ○○を生成して
+      /(.+?)生成して/,      // ○○生成して
+      /(.+?)をお願い/,      // ○○をお願い
+      /(.+?)お願い/,        // ○○お願い
+    ];
+    
+    let projectMatch = null;
+    for (const pattern of patterns) {
+      projectMatch = content.match(pattern);
+      if (projectMatch) break;
+    }
     
     if (!projectMatch) return;
 
@@ -76,7 +115,7 @@ class NostrBot {
       return;
     }
     
-    console.log(`Detected project request: "${projectIdea}作りたい" from ${pubkey.slice(0, 8)}...`);
+    console.log(`Detected project request: "${projectIdea}" from ${pubkey.slice(0, 8)}...`);
     
     this.activeProjects.set(eventId, true);
     

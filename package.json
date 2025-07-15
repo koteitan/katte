@@ -13,7 +13,6 @@
   "license": "MIT",
   "type": "commonjs",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.56.0",
     "dotenv": "^17.2.0",
     "nostr-tools": "^2.15.0"
   },

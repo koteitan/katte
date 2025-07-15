@@ -1,13 +1,30 @@
 # Nostr Claude Bot
 
-Nostrで「○○作りたい」と投稿すると、自動的にClaude Codeがプロジェクトを作成するbotです。
+Nostrで様々なプロジェクト作成メッセージを投稿すると、自動的にClaude Codeがプロジェクトを作成するbotです。
 
 ## 機能
 
-- Nostrのリレーを監視し、「○○作りたい」パターンのメッセージを検出
-- Claude APIを使用してプロジェクトの要件を分析
-- Claude Codeを実行してプロジェクトを自動生成
+- Nostrのリレーを監視し、プロジェクト作成要求を検出
+- Claude CLIを実行してプロジェクトを自動生成
 - 生成結果をNostrで返信
+
+## 対応メッセージパターン
+
+以下のようなメッセージに反応してプロジェクトを作成します：
+
+- 「TODOアプリ作りたい」
+- 「Webサイトほしい」  
+- 「チャットボット欲しい」
+- 「ゲームが欲しい」
+- 「APIを作って」
+- 「ダッシュボード作成して」
+- 「システムを開発して」
+- 「ツールを実装して」
+- 「ライブラリが必要」
+- 「スクリプトを生成して」
+- 「プラグインをお願い」
+
+その他、○○の部分にプロジェクト名を入れた様々な表現に対応しています。
 
 ## セットアップ
 
@@ -33,12 +50,13 @@ cp .env.example .env
 # Nostr Bot Configuration
 NOSTR_PRIVATE_KEY=nsec1...  # あなたのNostrプライベートキー（nsec形式またはhex形式）
 
-# Claude API Configuration
-ANTHROPIC_API_KEY=sk-ant-...  # AnthropicのAPIキー
+# Claude CLI Configuration (uses system auth)
+# No API key needed - Claude CLI uses local authentication
 
 # Bot Configuration
 BOT_NAME=NostrClaudeBot
-NOSTR_RELAYS=wss://relay.damus.io,wss://relay.nostr.band,wss://nos.lol
+# 自前のリレーまたは許可を得たリレーのURLを設定してください
+NOSTR_RELAYS=wss://localhost:7000
 
 # Project Generation Settings
 PROJECT_BASE_PATH=./generated-projects
@@ -136,7 +154,7 @@ sequenceDiagram
 
 #### 1. リレーへの接続（WebSocket接続）
 - **目的**: リアルタイムでメッセージを受信するため
-- **接続先**: 環境変数で指定されたリレー（デフォルト: relay.damus.io, relay.nostr.band, nos.lol）
+- **接続先**: 環境変数で指定されたリレー（自前のリレーまたは許可を得たリレーを推奨）
 - **接続方法**: WebSocketプロトコルで常時接続を維持
 - **負荷**: 最小限（通常のNostrクライアントと同等）
 
@@ -163,10 +181,11 @@ sequenceDiagram
 3. **エラー時の自動ブロック**: 5回以上エラーが続くユーザーを遮断
 
 #### リレーの負荷を最小化するベストプラクティス
-1. **必要最小限のリレーに接続**: 使用するリレーを厳選
-2. **効率的なフィルタリング**: クライアント側でなくリレー側でフィルタ
-3. **適切なメッセージサイズ**: 長大なメッセージを避ける
-4. **エラー時の再接続制御**: 無限ループを防ぐ
+1. **自前のリレーまたは許可を得たリレーを使用**: 他のリレーに迷惑をかけないため
+2. **必要最小限のリレーに接続**: 使用するリレーを厳選
+3. **効率的なフィルタリング**: クライアント側でなくリレー側でフィルタ
+4. **適切なメッセージサイズ**: 長大なメッセージを避ける
+5. **エラー時の再接続制御**: 無限ループを防ぐ
 
 ### Nostrプロトコルの使用方法
 

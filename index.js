@@ -1,10 +1,13 @@
 require('dotenv').config();
+const WebSocket = require('ws');
+global.WebSocket = WebSocket;
+
 const { NostrBot } = require('./src/nostrBot');
 const { ProjectManager } = require('./src/projectManager');
 const { ClaudeClient } = require('./src/claudeClient');
 
 async function main() {
-  const claudeClient = new ClaudeClient(process.env.ANTHROPIC_API_KEY);
+  const claudeClient = new ClaudeClient(); // No API key needed for CLI
   const projectManager = new ProjectManager(process.env.PROJECT_BASE_PATH);
   const bot = new NostrBot({
     privateKey: process.env.NOSTR_PRIVATE_KEY,
