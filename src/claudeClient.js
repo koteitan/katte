@@ -48,7 +48,7 @@ class ClaudeClient {
       const tempFile = path.join(projectPath, 'claude-prompt.tmp');
       await fs.writeFile(tempFile, prompt, 'utf8');
       
-      const command = `cd ${projectPath} && claude -p "$(cat claude-prompt.tmp)" --output-format text --verbose`;
+      const command = `cd ${projectPath} && claude -p "$(cat claude-prompt.tmp)" --output-format text --verbose --dangerously-skip-permissions`;
       console.log(`\n--------------ここから--------------`);
       console.log(`Project path: ${projectPath}`);
       console.log(`Command: ${command}`);
