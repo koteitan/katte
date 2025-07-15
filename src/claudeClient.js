@@ -14,7 +14,7 @@ class ClaudeClient {
 
     await this.executeClaudeCode(projectPath, prompt, execEnv);
     
-    return this.summarizeProject(projectPath);
+    return this.summarizeProject(projectIdea, projectPath);
   }
 
   async executeClaudeCode(projectPath, prompt, execEnv) {
@@ -34,11 +34,7 @@ class ClaudeClient {
       console.log(`Prompt: ${prompt}`);
       console.log(`--------------ここまで--------------\n`);
       
-      // 実際の実行はスキップ（手動テスト用）
-      console.log('Claude CLI execution skipped - please run manually');
-      
-      // 実際に実行する場合は以下のコメントを外す
-      /*
+      // 実際にClaude CLIを実行
       console.log(`Executing Claude CLI in: ${projectPath}`);
       const startTime = Date.now();
       const result = await execAsync(command, options);
@@ -47,7 +43,6 @@ class ClaudeClient {
       console.log(`Claude CLI execution completed in ${endTime - startTime}ms`);
       if (result.stdout) console.log('Claude CLI stdout:', result.stdout);
       if (result.stderr) console.log('Claude CLI stderr:', result.stderr);
-      */
       
     } catch (error) {
       console.error('Claude CLI execution error:', error);
@@ -55,13 +50,8 @@ class ClaudeClient {
     }
   }
 
-  async summarizeProject(projectPath) {
-    try {
-      const { stdout } = await execAsync(`cd ${projectPath} && ls -la && head -20 README.md 2>/dev/null || echo "No README found"`);
-      return `プロジェクトが作成されました:\n\`\`\`\n${stdout}\n\`\`\``;
-    } catch (error) {
-      return 'プロジェクトの概要を取得できませんでした。';
-    }
+  async summarizeProject(projectIdea, projectPath) {
+    return `「${projectIdea}」プロジェクトが作成されました！`;
   }
 }
 

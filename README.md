@@ -109,44 +109,47 @@ sequenceDiagram
     participant User as ユーザー
     participant Nostr as Nostrリレー
     participant Bot as Nostr Claude Bot
-    participant Claude as Claude API
-    participant CC as Claude Code CLI
+    participant CLI as Claude CLI
     participant FS as ファイルシステム
 
-    User->>Nostr: 「TODOアプリ作りたい」と投稿
+    User->>Nostr: 様々なパターンで投稿<br/>「TODOアプリ作りたい」<br/>「Webサイトほしい」<br/>「APIを作って」等
     Nostr->>Bot: イベント通知（WebSocket）
     
+    Bot->>Bot: パターンマッチング<br/>- 19種類のパターン検出<br/>- プロジェクト名抽出
     Bot->>Bot: セキュリティチェック<br/>- ブラックリスト確認<br/>- レート制限確認<br/>- 入力検証
     
     alt セキュリティチェックNG
         Bot->>Bot: ログに記録して終了<br/>（エラーメッセージは送信しない）
     else セキュリティチェックOK
-        Bot->>Nostr: 「プロジェクト作成開始」を返信
+        Bot->>Nostr: 「プロジェクト『○○』作成開始」を返信
         Nostr->>User: 返信を表示
         
-        Bot->>FS: プロジェクトディレクトリ作成
-        Bot->>Claude: プロジェクト生成指示
-        Claude->>Bot: 生成手順を返す
+        Bot->>FS: プロジェクトディレクトリ作成<br/>セキュリティ設定(.claude/settings.json)
         
-        Bot->>CC: Claude Codeで実行
-        CC->>FS: ファイル生成<br/>- ソースコード<br/>- README.md<br/>- 設定ファイル
+        Bot->>CLI: Claude CLI直接実行<br/>プロンプト: 「『○○』を作成してください」
+        CLI->>FS: ファイル生成<br/>- ソースコード<br/>- README.md<br/>- 設定ファイル
         
-        Bot->>FS: 生成結果を確認
-        Bot->>Nostr: 「プロジェクト完成」を返信
+        Bot->>Nostr: 「『○○』プロジェクト完成！」を返信
         Nostr->>User: 完成通知を表示
     end
     
-    Note over Bot: エラー発生時は<br/>ログ記録のみ
+    Note over Bot: エラー発生時は<br/>ログ記録のみ<br/>Claude APIは使用しない
 ```
 
 ### 対応するプロジェクトの例
 
 - 「TODOアプリ作りたい」
-- 「ゲーム作りたい」
-- 「チャットボット作りたい」
-- 「計算機作りたい」
-- 「ブログシステム作りたい」
-- 「API作りたい」
+- 「Webサイトほしい」
+- 「チャットボット欲しい」
+- 「ゲームが欲しい」
+- 「APIを作って」
+- 「ダッシュボード作成して」
+- 「システムを開発して」
+- 「ツールを実装して」
+- 「ライブラリが必要」
+- 「スクリプトを生成して」
+- 「プラグインをお願い」
+- 「負けず嫌いなのでキレられるとキレ返しちゃうからお願いだからキレないで」（実例😄）
 
 ## Nostrアクセスの仕組み
 
