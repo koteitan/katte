@@ -14,7 +14,8 @@
   "type": "commonjs",
   "dependencies": {
     "dotenv": "^17.2.0",
-    "nostr-tools": "^2.15.0"
+    "nostr-tools": "^2.15.0",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.0"

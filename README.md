@@ -1,6 +1,7 @@
 # Nostr Claude Bot
 
-Nostrで様々なプロジェクト作成メッセージを投稿すると、自動的にClaude Codeがプロジェクトを作成するbotです。
+Nostrで「○○がほしいなぁ」みたいにつぶやいている人を見つけて勝手にClaude Codeで製作し出すbotです。
+ギャグで作っただけで、実際はこんなものを起動するとシステム壊されたり違法なもの作られたり変な依頼が来る可能性があるのでまぁ基本使わない方がいいです。
 
 ## 機能
 
@@ -34,48 +35,114 @@ git clone https://github.com/yourusername/nostr-claude-bot.git
 cd nostr-claude-bot
 ```
 
-### 2. 依存関係のインストール
-```bash
-npm install
-```
-
-### 3. 環境変数の設定
+### 2. 環境変数の設定
 `.env.example`を`.env`にコピーして必要な情報を設定：
 ```bash
 cp .env.example .env
+nano .env  # 設定を編集
 ```
 
-`.env`ファイルを編集：
-```env
-# Nostr Bot Configuration
-NOSTR_PRIVATE_KEY=nsec1...  # あなたのNostrプライベートキー（nsec形式またはhex形式）
+### 3. Docker セットアップ（推奨）
 
-# Claude CLI Configuration (uses system auth)
-# No API key needed - Claude CLI uses local authentication
-
-# Bot Configuration
-BOT_NAME=NostrClaudeBot
-# 自前のリレーまたは許可を得たリレーのURLを設定してください
-NOSTR_RELAYS=wss://localhost:7000
-
-# Project Generation Settings
-PROJECT_BASE_PATH=./generated-projects
-MAX_CONCURRENT_PROJECTS=3
-```
-
-### 4. Claude Codeのインストール
-このbotはClaude Code CLIを使用するため、事前にインストールが必要です：
+#### 3.1 Docker権限の設定（初回のみ）
 ```bash
-npm install -g @anthropic-ai/claude-code
+# ユーザーをdockerグループに追加
+sudo usermod -aG docker $USER
+
+# 新しいグループ設定を適用
+newgrp docker
+
+# 確認
+groups $USER
+# 出力に 'docker' が含まれていればOK
 ```
+
+⚠️ **セキュリティ上の注意**: dockerグループのメンバーは実質的にroot権限を持ちます。開発環境でのみ使用し、本番環境では慎重に検討してください。
+
+#### 3.2 Botのセットアップ
+```bash
+./setup-docker.sh
+```
+
+このスクリプトは以下を自動で行います：
+- Dockerグループの設定確認・自動設定
+- Dockerサービスの開始
+- .envファイルの確認
+- Docker イメージのビルド
+- **最小限のマウント**で安全なコンテナでの Bot 起動
 
 ## 使い方
 
-### Botの起動
+### 2. 監視とメンテナンス
+
 ```bash
-npm start
-# または開発モード
-npm run dev
+# 定期的なログ確認
+docker logs -f nostr-claude-bot-simple
+
+# コンテナ再起動（必要時）
+docker restart nostr-claude-bot-simple
+```
+
+### 3. Claude CLI統合（オプション）
+
+実際のプロジェクト生成機能が必要な場合：
+```bash
+./run-with-claude.sh
+```
+
+### 4. 設定変更
+
+`.env`ファイルを編集後：
+```bash
+docker restart nostr-claude-bot-simple
+```
+
+## 🔧 便利なコマンド
+
+```bash
+# 停止
+docker stop nostr-claude-bot-simple
+
+# 完全リセット
+./cleanup-docker.sh
+./setup-docker.sh
+```
+
+## 🛡️ セキュリティについて
+
+### Docker権限について
+- **dockerグループ**: 実質的にroot権限を持つため注意が必要
+- **開発環境**: 個人の開発マシンでは一般的に安全
+- **本番環境**: より慎重な権限管理が必要
+
+### セキュリティ対策
+本プロジェクトでは以下のセキュリティ対策を実装しています：
+
+#### 1. 最小限のマウント
+```bash
+# 必要最小限のファイルのみマウント
+-v "$(pwd)/.env:/app/.env:ro"  # 設定ファイル（読み取り専用）
+```
+
+#### 2. ホストファイルシステムの保護
+- `generated-projects/` マウントを削除 → ホストファイルシステムへの書き込み不可
+- `logs/` マウントを削除 → ログは `docker logs` コマンドで確認
+- ホストの重要なディレクトリ（`/etc`, `/root`, `/home`等）にアクセス不可
+
+#### 3. 読み取り専用設定
+- `.env` ファイルは読み取り専用（`:ro`）でマウント
+- 設定ファイルの改ざんを防止
+
+### 代替案（本番環境向け）
+```bash
+# 1. sudoを使い続ける
+sudo docker logs -f nostr-claude-bot-simple
+
+# 2. Docker Rootless Mode
+dockerd-rootless-setuptool.sh install
+
+# 3. 専用サービスアカウント
+sudo useradd -r -s /bin/false docker-service
 ```
 
 ### Nostrでの使用方法

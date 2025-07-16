@@ -1,0 +1,27 @@
+# Dockerfile for Claude CLI browser authentication
+FROM node:20-slim
+
+# Install necessary packages
+RUN apt-get update && apt-get install -y \
+    curl \
+    ca-certificates \
+    --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Claude CLI via npm (correct package name)
+RUN npm install -g @anthropic-ai/claude-code
+
+# Verify installation
+RUN which claude && claude --version
+
+# Set up working directory
+WORKDIR /app
+
+# Create claude config directory
+RUN mkdir -p /root/.claude
+
+# Expose port for browser authentication
+EXPOSE 8080
+
+# Default command for authentication
+CMD ["claude", "auth"]

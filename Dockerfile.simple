@@ -1,0 +1,22 @@
+# Simple Dockerfile for nostr-claude-bot without Claude CLI
+FROM node:20-slim
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies (use npm install instead of ci to handle lock file issues)
+RUN npm install --only=production
+
+# Copy application code
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p generated-projects logs
+
+# Set environment to production
+ENV NODE_ENV=production
+
+# Start the bot
+CMD ["node", "index.js"]

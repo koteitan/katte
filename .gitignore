@@ -1,9 +1,41 @@
+# Dependencies
 node_modules/
+
+# Environment variables
 .env
-generated-projects/
+
+# Logs
+logs/
 *.log
+
+# Generated projects
+generated-projects/
+
+# Results from container
+results/
+
+# Claude authentication (NEVER commit this!)
+claude-config/
+
+# Docker volumes
+docker-volumes/
+
+# OS files
 .DS_Store
-dist/
-build/
+Thumbs.db
+
+# Editor files
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+
+# Build artifacts
+dist/
+build/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
